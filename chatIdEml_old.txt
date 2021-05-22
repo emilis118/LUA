@@ -1,0 +1,79 @@
+script_name("ChatId")
+script_version("1.1")
+script_author("Narvell")
+script_description("edit by Emilis")
+
+-----------------------------------------------------------------------------
+
+local sampev = require 'lib.samp.events'
+local enable = true
+require "lib.sampfuncs"
+require "lib.moonloader"
+
+-----------------------------------------------------------------------------
+
+function main()
+	repeat wait (0)
+	until isSampLoaded()
+	repeat wait (0)
+	until isSampfuncsLoaded()
+	while true do
+		wait(0)
+		local cmdResult = sampIsChatCommandDefined("chatid")
+		if not cmdResult then
+			local result = sampRegisterChatCommand("chatid", toggleFunc)
+		end
+	end
+end
+
+-----------------------------------------------------------------------------
+
+function sampev.onServerMessage(color, text)
+	if enable then
+		enter = false
+		if string.find(text, "%u%l+_%u%l+") and not string.find(text, "%u%l+_%u%l+".."%[%d+%]") and not string.find(text, "%u%l+_%u%l+: %(%d+%)") and not string.find(text, "%u%l+_%u%l+ %(%d+%)") and not string.find(text, "Mod] %u%l+_%u%l+") and not string.find(text, "G.Mod] %u%l+_%u%l+") and not string.find(text, "DPKT] %u%l+_%u%l+") and not string.find(text, "AntiCheat] %u%l+_%u%l+") and not string.find(text, "%[%u%l+_%u%l+")
+		then
+			--playerName = string.match(text, "%u%l+_%u%l+")
+			local playerName = {}
+			for capture in string.gmatch(text, "%u%l+_%u%l+") do
+				table.insert(playerName, capture)
+			end
+
+			for i = 1, #playerName do
+				-- sampAddChatMessage("rastas nick: "..playerName, 0xFFFFFF)
+				if playerName[i] then
+					if i-1 ~= 0 and playerName[i]==playerName[i-1] then break end
+					playerId = sampGetPlayerIdByNickname(playerName[i])
+					-- sampAddChatMessage("jo id: "..playerId, 0xFFFFFF)
+					local edit = true
+					if edit and playerId ~= nil then
+						text = string.gsub(text, playerName[i], playerName[i].."["..playerId.."]")
+						enter = true
+						edit = false
+					end
+				end
+			end
+		end
+	end
+	if enter then
+		sampAddChatMessage(text, bit.rshift(color, 8))
+		return false
+	end
+end
+
+function sampGetPlayerIdByNickname(nick)
+	local result, id = sampGetPlayerIdByCharHandle(PLAYER_PED)
+	if nick == sampGetPlayerNickname(id) then return id end
+	for i = 0, sampGetMaxPlayerId(false) do
+		if sampIsPlayerConnected(i) and sampGetPlayerNickname(i) == nick then return i end
+	end
+end
+
+function toggleFunc()
+	enable = not enable
+	if enable then
+		sampAddChatMessage("{34eb37}[ChatID] Ijungtas. {cdeb34}Isjungti su /chatid.", 0x34eb74)
+	else
+		sampAddChatMessage("{eb3434}[ChatID] Isjungtas. {cdeb34}Ijungti su /chatid.", 0x34eb74)
+	end
+end
